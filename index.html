@@ -125,6 +125,84 @@
                 linear-gradient(90deg, rgba(63, 66, 75, 0.08) 1px, transparent 1px);
             background-size: 48px 48px;
         }
+
+        /* === Custom scrollbars for side panes === */
+        .custom-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: #3f3f46 transparent;
+            scroll-behavior: smooth;
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+            margin: 4px 0;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3f3f46, #27272a);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #52525b, #3f3f46);
+        }
+
+        /* === Collapsible side panes === */
+        .side-pane {
+            transition: width 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        .side-pane.pane-collapsed {
+            width: 3.25rem !important;
+        }
+        .side-pane.pane-collapsed .pane-body {
+            display: none;
+        }
+        .side-pane:not(.pane-collapsed) .pane-rail {
+            display: none !important;
+        }
+
+        .pane-toggle {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(39, 39, 42, 0.6);
+            color: #a1a1aa;
+            transition: all 0.18s ease;
+            flex-shrink: 0;
+        }
+        .pane-toggle:hover {
+            background: rgba(34, 211, 238, 0.12);
+            border-color: rgba(34, 211, 238, 0.4);
+            color: #67e8f9;
+        }
+
+        .rail-label {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            font-size: 0.625rem;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            color: #52525b;
+            margin-top: 4px;
+            user-select: none;
+        }
+        .rail-icon {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: rgba(39, 39, 42, 0.5);
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body class="bg-zinc-950 text-zinc-200 overflow-hidden">
@@ -213,8 +291,28 @@
     <div class="flex h-[calc(100vh-4rem)] max-w-[1480px] mx-auto w-full">
         
         <!-- Left Toolbar -->
-        <div class="w-72 border-r border-zinc-800 bg-zinc-900 p-5 flex flex-col">
-            <div class="section-header mb-3 px-1">CONSTRUCTION</div>
+        <div id="left-pane" class="side-pane w-72 flex-shrink-0 border-r border-zinc-800 bg-zinc-900 flex flex-col relative">
+
+            <!-- Collapsed rail -->
+            <div class="pane-rail hidden flex-col items-center gap-4 pt-3.5">
+                <button onclick="toggleLeftPane()" title="Expand panel" class="pane-toggle">
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </button>
+                <div class="rail-label">CONSTRUCTION</div>
+                <button onclick="toggleLeftPane()" class="rail-icon text-cyan-400" title="Spawn Drone"><i class="fa-solid fa-plus"></i></button>
+                <button onclick="toggleLeftPane()" class="rail-icon text-amber-400" title="Resource"><i class="fa-solid fa-mountain"></i></button>
+                <button onclick="toggleLeftPane()" class="rail-icon text-violet-400" title="Profile"><i class="fa-solid fa-user-astronaut"></i></button>
+            </div>
+
+            <!-- Expanded body -->
+            <div class="pane-body flex flex-col flex-1 min-h-0">
+                <div class="flex items-center justify-between px-5 pt-5 pb-2 flex-shrink-0">
+                    <div class="section-header">CONSTRUCTION</div>
+                    <button onclick="toggleLeftPane()" title="Collapse panel" class="pane-toggle">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto custom-scroll px-5 pb-5 flex flex-col">
             
             <!-- Build Tools -->
             <div class="space-y-2 mb-6">
@@ -318,6 +416,8 @@
                     </div>
                 </div>
             </div>
+                </div>
+            </div>
         </div>
 
         <!-- Main Canvas Area -->
@@ -350,13 +450,34 @@
         </div>
 
         <!-- Right Inspector -->
-        <div class="w-80 border-l border-zinc-800 bg-zinc-900 p-5 flex flex-col overflow-y-auto">
-            <div id="inspector-content">
-                <!-- Populated by JS -->
-                <div class="flex flex-col items-center justify-center h-64 text-center px-6">
-                    <i class="fa-solid fa-robot text-5xl text-zinc-700 mb-4"></i>
-                    <div class="text-lg font-semibold text-zinc-400">No drone selected</div>
-                    <p class="text-xs text-zinc-500 mt-2">Click a drone on the map or spawn a new one to begin programming its behavior.</p>
+        <div id="right-pane" class="side-pane w-80 flex-shrink-0 border-l border-zinc-800 bg-zinc-900 flex flex-col relative">
+
+            <!-- Collapsed rail -->
+            <div class="pane-rail hidden flex-col items-center gap-4 pt-3.5">
+                <button onclick="toggleRightPane()" title="Expand panel" class="pane-toggle">
+                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                </button>
+                <div class="rail-label">INSPECTOR</div>
+                <button onclick="toggleRightPane()" class="rail-icon text-cyan-400" title="Inspector"><i class="fa-solid fa-robot"></i></button>
+            </div>
+
+            <!-- Expanded body -->
+            <div class="pane-body flex flex-col flex-1 min-h-0">
+                <div class="flex items-center justify-between px-5 pt-5 pb-2 flex-shrink-0">
+                    <button onclick="toggleRightPane()" title="Collapse panel" class="pane-toggle">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                    <div class="section-header">INSPECTOR</div>
+                </div>
+                <div class="flex-1 overflow-y-auto custom-scroll px-5 pb-5">
+                    <div id="inspector-content">
+                        <!-- Populated by JS -->
+                        <div class="flex flex-col items-center justify-center h-64 text-center px-6">
+                            <i class="fa-solid fa-robot text-5xl text-zinc-700 mb-4"></i>
+                            <div class="text-lg font-semibold text-zinc-400">No drone selected</div>
+                            <p class="text-xs text-zinc-500 mt-2">Click a drone on the map or spawn a new one to begin programming its behavior.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -994,6 +1115,23 @@
             }
         }
         
+        // === Collapsible side panes ===
+        function toggleLeftPane() {
+            const pane = document.getElementById('left-pane');
+            const rail = pane.querySelector('.pane-rail');
+            const collapsed = pane.classList.toggle('pane-collapsed');
+            rail.classList.toggle('hidden', !collapsed);
+            rail.classList.toggle('flex', collapsed);
+        }
+
+        function toggleRightPane() {
+            const pane = document.getElementById('right-pane');
+            const rail = pane.querySelector('.pane-rail');
+            const collapsed = pane.classList.toggle('pane-collapsed');
+            rail.classList.toggle('hidden', !collapsed);
+            rail.classList.toggle('flex', collapsed);
+        }
+
         // Mode handling
         function setMode(mode) {
             currentMode = mode;
@@ -1469,184 +1607,283 @@
             ctx.restore();
         }
         
+        // === Canvas drawing helpers ===
+        function _hexToRgba(hex, a) {
+            const h = (hex || '#67e8f9').replace('#', '');
+            const r = parseInt(h.substring(0, 2), 16);
+            const g = parseInt(h.substring(2, 4), 16);
+            const b = parseInt(h.substring(4, 6), 16);
+            return `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+        function _regularPoly(ctx, cx, cy, radius, sides, rotation) {
+            ctx.beginPath();
+            for (let i = 0; i < sides; i++) {
+                const ang = rotation + (i / sides) * Math.PI * 2;
+                const px = cx + Math.cos(ang) * radius;
+                const py = cy + Math.sin(ang) * radius;
+                if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+        }
+        function _roundRect(ctx, x, y, w, h, r) {
+            r = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
         function drawDrone(drone) {
             ctx.save();
-            
+
             const isSelected = selectedDrone && selectedDrone.id === drone.id;
             const isMoving = drone.state === 'moving_to_resource' || drone.state === 'moving_to_base';
-            const bobOffset = drone.state === 'idle' || !drone.state ? Math.sin(time * 3.5 + drone.id) * 0.7 : 0;
-            
-            // === SELECTION HIGHLIGHT (Premium Apple-style) ===
+            const isMining = drone.state === 'mining';
+            const settled = drone.state === 'idle' || !drone.state || drone.state === 'manual' || drone.state === 'waiting';
+            const bob = settled ? Math.sin(time * 3.2 + drone.id) * 1.2 : Math.sin(time * 6 + drone.id) * 0.55;
+
+            const cx = drone.x;
+            const cy = drone.y + bob;
+            const s = drone.size;
+            const accent = drone.color || '#67e8f9';
+            const heading = drone.angle || 0;
+
+            // === Mining beam (world space) ===
+            if (isMining && drone.target) {
+                ctx.strokeStyle = 'rgba(252, 211, 77, 0.55)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([2, 3]);
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(drone.target.x, drone.target.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                if (Math.random() < 0.28) createMiningParticles(drone.x, drone.y, 2);
+            }
+            if (drone.state === 'moving_to_base' &&
+                Math.hypot(drone.x - base.x, drone.y - base.y) < 45 && Math.random() < 0.18) {
+                createUnloadParticles(base.x, base.y - 8, 3);
+            }
+
+            // === Selection highlight ===
             if (isSelected) {
-                // Soft outer glow
-                const selGlow = ctx.createRadialGradient(
-                    drone.x, drone.y, drone.size + 6,
-                    drone.x, drone.y, drone.size + 26
-                );
-                selGlow.addColorStop(0, 'rgba(103, 232, 249, 0.25)');
+                const selGlow = ctx.createRadialGradient(cx, cy, s + 4, cx, cy, s + 32);
+                selGlow.addColorStop(0, 'rgba(103, 232, 249, 0.22)');
                 selGlow.addColorStop(1, 'transparent');
                 ctx.fillStyle = selGlow;
                 ctx.beginPath();
-                ctx.arc(drone.x, drone.y, drone.size + 26, 0, Math.PI * 2);
+                ctx.arc(cx, cy, s + 32, 0, Math.PI * 2);
                 ctx.fill();
-                
-                // Crisp selection ring
-                ctx.strokeStyle = '#67e8f9';
-                ctx.lineWidth = 2.25;
-                ctx.shadowColor = 'rgba(103, 232, 249, 0.5)';
-                ctx.shadowBlur = 6;
+
+                ctx.strokeStyle = 'rgba(103, 232, 249, 0.85)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([3, 5]);
                 ctx.beginPath();
-                ctx.arc(drone.x, drone.y, drone.size + 10, 0, Math.PI * 2);
+                ctx.arc(cx, cy, s + 17, time * 0.6, time * 0.6 + Math.PI * 2);
                 ctx.stroke();
-                ctx.shadowBlur = 0;
+                ctx.setLineDash([]);
             }
-            
-            // === SHADOW ===
-            ctx.shadowColor = 'rgba(0,0,0,0.55)';
-            ctx.shadowBlur = 10;
-            ctx.shadowOffsetY = 4;
-            
-            // === MAIN DRONE BODY (Metallic + Gradient) ===
-            const bodyGrad = ctx.createRadialGradient(
-                drone.x - drone.size * 0.35, drone.y - drone.size * 0.35, drone.size * 0.3,
-                drone.x + drone.size * 0.25, drone.y + drone.size * 0.25, drone.size * 1.1
-            );
-            bodyGrad.addColorStop(0, drone.color || '#67e8f9');
-            bodyGrad.addColorStop(0.55, '#164e63');
-            bodyGrad.addColorStop(1, '#0f172a');
-            
-            ctx.fillStyle = bodyGrad;
+
+            // === Ground shadow ===
+            ctx.fillStyle = 'rgba(0,0,0,0.28)';
             ctx.beginPath();
-            ctx.arc(drone.x, drone.y + bobOffset, drone.size, 0, Math.PI * 2);
+            ctx.ellipse(drone.x, drone.y + s + 11, s * 1.05, s * 0.34, 0, 0, Math.PI * 2);
             ctx.fill();
-            
+
+            // === Transform into drone-local, heading-aligned space ===
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(heading + Math.PI / 2); // nose points along heading
+
+            const armLen = s * 1.5;
+            const rotorR = s * 0.66;
+            const diag = armLen * 0.72;
+            const rotors = [
+                { x: -diag, y: -diag, front: true },
+                { x:  diag, y: -diag, front: true },
+                { x: -diag, y:  diag, front: false },
+                { x:  diag, y:  diag, front: false },
+            ];
+
+            // Arms (dark) + subtle highlight
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#27272a';
+            ctx.lineWidth = s * 0.36;
+            for (const r of rotors) {
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(r.x, r.y);
+                ctx.stroke();
+            }
+            ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+            ctx.lineWidth = s * 0.12;
+            for (const r of rotors) {
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(r.x, r.y);
+                ctx.stroke();
+            }
+
+            // Rotors: housing, swept disc + spinning blades, guard ring
+            const spin = time * (isMoving ? 60 : 38);
+            for (let i = 0; i < rotors.length; i++) {
+                const r = rotors[i];
+
+                // downward thruster glow when moving
+                if (isMoving) {
+                    const tg = ctx.createRadialGradient(r.x, r.y, 1, r.x, r.y, rotorR * 1.15);
+                    tg.addColorStop(0, _hexToRgba(accent, 0.5));
+                    tg.addColorStop(1, 'transparent');
+                    ctx.fillStyle = tg;
+                    ctx.beginPath();
+                    ctx.arc(r.x, r.y, rotorR * 1.15, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // motor housing
+                ctx.fillStyle = '#18181b';
+                ctx.beginPath();
+                ctx.arc(r.x, r.y, rotorR * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#3f3f46';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // spinning blades (motion-blur disc + two blades)
+                ctx.save();
+                ctx.translate(r.x, r.y);
+                ctx.rotate(spin + i * 1.7);
+                const blade = ctx.createRadialGradient(0, 0, rotorR * 0.18, 0, 0, rotorR);
+                blade.addColorStop(0, 'rgba(148,163,184,0.04)');
+                blade.addColorStop(0.7, 'rgba(148,163,184,0.18)');
+                blade.addColorStop(1, 'rgba(148,163,184,0)');
+                ctx.fillStyle = blade;
+                ctx.beginPath();
+                ctx.arc(0, 0, rotorR, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(226,232,240,0.5)';
+                ctx.lineWidth = 1.7;
+                ctx.lineCap = 'round';
+                for (let b = 0; b < 2; b++) {
+                    ctx.rotate(Math.PI);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(rotorR * 0.9, 0);
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                // rotor guard ring (front = accent, rear = red)
+                ctx.strokeStyle = r.front ? _hexToRgba(accent, 0.55) : 'rgba(248,113,113,0.45)';
+                ctx.lineWidth = 1.7;
+                ctx.beginPath();
+                ctx.arc(r.x, r.y, rotorR, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // === Central chassis (hex body) ===
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetY = 2;
+            const bodyGrad = ctx.createLinearGradient(0, -s, 0, s);
+            bodyGrad.addColorStop(0, '#52525b');
+            bodyGrad.addColorStop(0.5, '#1c1c1f');
+            bodyGrad.addColorStop(1, '#09090b');
+            ctx.fillStyle = bodyGrad;
+            _regularPoly(ctx, 0, 0, s * 0.98, 6, Math.PI / 6);
+            ctx.fill();
             ctx.shadowBlur = 0;
             ctx.shadowOffsetY = 0;
-            
-            // === HIGHLIGHT RIM ===
-            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-            ctx.lineWidth = 2.2;
-            ctx.beginPath();
-            ctx.arc(drone.x, drone.y + bobOffset, drone.size, -1.8, 1.1);
+
+            // body rim
+            ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+            ctx.lineWidth = 1.4;
+            _regularPoly(ctx, 0, 0, s * 0.98, 6, Math.PI / 6);
             ctx.stroke();
-            
-            // === INNER DARK CORE ===
-            ctx.fillStyle = '#0f172a';
+
+            // accent trim ring
+            ctx.strokeStyle = accent;
+            ctx.globalAlpha = 0.7;
+            ctx.lineWidth = 1.6;
             ctx.beginPath();
-            ctx.arc(drone.x, drone.y + bobOffset, drone.size * 0.58, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // === THRUSTER GLOW (when moving) ===
-            if (isMoving) {
-                const thrustGrad = ctx.createRadialGradient(
-                    drone.x, drone.y + bobOffset + drone.size * 0.3,
-                    1,
-                    drone.x, drone.y + bobOffset + drone.size * 1.1,
-                    drone.size * 0.9
-                );
-                thrustGrad.addColorStop(0, 'rgba(103, 232, 249, 0.9)');
-                thrustGrad.addColorStop(0.4, 'rgba(103, 232, 249, 0.35)');
-                thrustGrad.addColorStop(1, 'transparent');
-                
-                ctx.fillStyle = thrustGrad;
-                ctx.beginPath();
-                ctx.ellipse(
-                    drone.x, 
-                    drone.y + bobOffset + drone.size * 0.75, 
-                    drone.size * 0.38, 
-                    drone.size * 0.75, 
-                    0, 0, Math.PI * 2
-                );
-                ctx.fill();
-            }
-            
-            // === DIRECTION INDICATOR (Antenna / Sensor) ===
-            ctx.strokeStyle = '#e0f2fe';
-            ctx.lineWidth = 2.1;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(drone.x, drone.y + bobOffset);
-            
-            const dirLen = isMoving ? drone.size * 1.05 : drone.size * 0.82;
-            const dirX = drone.x + Math.cos(drone.angle || 0) * dirLen;
-            const dirY = drone.y + bobOffset + Math.sin(drone.angle || 0) * dirLen;
-            ctx.lineTo(dirX, dirY);
+            ctx.arc(0, 0, s * 0.64, 0, Math.PI * 2);
             ctx.stroke();
-            
-            // Small sensor tip
-            ctx.fillStyle = '#bae6fd';
+            ctx.globalAlpha = 1;
+
+            // === Sensor eye (glowing, toward nose) ===
+            const eyeY = -s * 0.16;
+            const eyePulse = 0.6 + Math.sin(time * 4 + drone.id) * 0.4;
+            const eyeGlow = ctx.createRadialGradient(0, eyeY, 0.5, 0, eyeY, s * 0.58);
+            eyeGlow.addColorStop(0, accent);
+            eyeGlow.addColorStop(0.4, _hexToRgba(accent, 0.5 * eyePulse));
+            eyeGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = eyeGlow;
             ctx.beginPath();
-            ctx.arc(dirX, dirY, 2.2, 0, Math.PI * 2);
+            ctx.arc(0, eyeY, s * 0.58, 0, Math.PI * 2);
             ctx.fill();
-            
-            // === CARGO INDICATOR (Premium pill style) ===
+            ctx.fillStyle = '#0a0a0a';
+            ctx.beginPath();
+            ctx.arc(0, eyeY, s * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = accent;
+            ctx.beginPath();
+            ctx.arc(0, eyeY, s * 0.15 * eyePulse + s * 0.04, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.beginPath();
+            ctx.arc(-s * 0.09, eyeY - s * 0.09, s * 0.06, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === Navigation beacons (front white, rear red), blinking ===
+            const blink = Math.sin(time * 6) > 0;
+            ctx.fillStyle = blink ? '#e0f2fe' : 'rgba(224,242,254,0.25)';
+            ctx.beginPath();
+            ctx.arc(0, -s * 0.82, s * 0.11, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = !blink ? '#f87171' : 'rgba(248,113,113,0.25)';
+            ctx.beginPath();
+            ctx.arc(0, s * 0.82, s * 0.11, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore(); // undo heading transform
+
+            // === Cargo indicator (world space) ===
             if (drone.cargo.iron > 0) {
-                const barWidth = 19;
+                const barWidth = 20;
                 const pct = drone.cargoPercent / 100;
-                const barY = drone.y + bobOffset + drone.size + 7.5;
-                
-                // Background track
+                const barY = cy + s + 8;
                 ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
-                ctx.fillRect(drone.x - barWidth/2, barY, barWidth, 4.2);
-                
-                // Fill
-                const fillColor = pct > 0.82 ? '#f59e0b' : '#14b8a6';
-                ctx.fillStyle = fillColor;
-                ctx.fillRect(drone.x - barWidth/2, barY, barWidth * pct, 4.2);
-                
-                // Subtle shine on bar
+                _roundRect(ctx, cx - barWidth / 2, barY, barWidth, 4.4, 2.2);
+                ctx.fill();
+                ctx.fillStyle = pct > 0.82 ? '#f59e0b' : '#14b8a6';
+                _roundRect(ctx, cx - barWidth / 2, barY, barWidth * pct, 4.4, 2.2);
+                ctx.fill();
                 ctx.fillStyle = 'rgba(255,255,255,0.35)';
-                ctx.fillRect(drone.x - barWidth/2, barY, barWidth * pct, 1.3);
+                ctx.fillRect(cx - barWidth / 2, barY, barWidth * pct, 1.3);
             }
-            
-            // === STATE LABEL (Clean Apple-style pill) ===
+
+            // === State label (world space) ===
             let stateText = '';
             let stateColor = '#64748b';
-            
-            if (drone.state === 'mining') {
-                stateText = 'MINING';
-                stateColor = '#fcd34d';
-                // Mining beam effect
-                if (drone.target) {
-                    ctx.strokeStyle = 'rgba(252, 211, 77, 0.55)';
-                    ctx.lineWidth = 1.5;
-                    ctx.setLineDash([2, 3]);
-                    ctx.beginPath();
-                    ctx.moveTo(drone.x, drone.y + bobOffset);
-                    ctx.lineTo(drone.target.x, drone.target.y);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-                    
-                    // Occasional mining particles
-                    if (Math.random() < 0.28) {
-                        createMiningParticles(drone.x, drone.y, 2);
-                    }
-                }
-            } 
+            if (drone.state === 'mining') { stateText = 'MINING'; stateColor = '#fcd34d'; }
             else if (drone.state === 'moving_to_resource') stateText = 'EN ROUTE';
-            else if (drone.state === 'moving_to_base') {
-                stateText = 'RETURNING';
-                // Unload particles when close to base
-                if (Math.hypot(drone.x - base.x, drone.y - base.y) < 45 && Math.random() < 0.18) {
-                    createUnloadParticles(base.x, base.y - 8, 3);
-                }
-            }
+            else if (drone.state === 'moving_to_base') stateText = 'RETURNING';
             else if (drone.state === 'waiting') stateText = 'STANDBY';
-            
+
             if (stateText) {
                 ctx.font = '600 8.5px Inter, system-ui';
                 const textWidth = ctx.measureText(stateText).width;
-                
-                // Label background
                 ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
-                ctx.fillRect(drone.x - textWidth/2 - 7, drone.y + bobOffset - drone.size - 19, textWidth + 14, 15);
-                
-                // Label text
+                _roundRect(ctx, cx - textWidth / 2 - 7, cy - s - 22, textWidth + 14, 15, 5);
+                ctx.fill();
                 ctx.fillStyle = stateColor;
                 ctx.textAlign = 'center';
-                ctx.fillText(stateText, drone.x, drone.y + bobOffset - drone.size - 8.5);
+                ctx.fillText(stateText, cx, cy - s - 11);
             }
-            
+
             ctx.restore();
         }
         
